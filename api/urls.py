@@ -12,6 +12,7 @@ urlpatterns = [
     path('registro/', RegistroView.as_view(), name='registro'),
     path('login/', LoginView.as_view(), name='registro'),
     path('produtos/<int:id_produto>/carrinho/', ProdutoNoCarrinhoView.as_view(), name='adicionar-item'),
+    path('checkout/', CheckOut.as_view(), name='pagamento'),
     path('', include(router.urls)),
 
 ]   

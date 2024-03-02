@@ -26,7 +26,6 @@ class ProdutoList(generics.ListCreateAPIView):
 class ProdutoDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProdutoSerializer
     queryset = Produto.objects.all()
-
     
 class CarrinhoViewSet(viewsets.ModelViewSet):
     queryset = Carrinho.objects.all()
@@ -168,3 +167,31 @@ class ProdutoNoCarrinhoView(APIView):
         except Exception as e:
             return Response({'error': f'Ocorreu um erro ao remover o item do carrinho: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+class CheckOut(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        carrinho = Carrinho.objects.get(usuario=user)
+        if carrinho.qtdItens == 0:
+            return Response({'error': 'Seu carrinho está vazio'})
+        try:
+            itens_carrinho = ItemDoCarrinho.objects.filter(carrinho=carrinho)
+            for item in itens_carrinho:
+                if item.quantidade > item.produto.quantidade:
+                    return Response({'error': f'Quantidade insuficiente em estoque para o produto {item.produto.nome}'}, status=status.HTTP_400_BAD_REQUEST)
+
+            for item in itens_carrinho:
+                produto = Produto.objects.get(id=item.produto.id)
+                produto.quantidade -= item.quantidade
+                item.delete()
+                produto.save()
+            carrinho.qtdItens = 0
+            carrinho.total = 0
+            carrinho.save()
+            return Response({'success': 'Pagamento realizado com sucesso!'})
+        except Exception as e:
+            return Response({'error': f'Ocorreu um erro ao processar o pagamento: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+        

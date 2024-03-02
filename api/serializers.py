@@ -34,7 +34,7 @@ class CarrinhoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Carrinho
-        fields = ('id', 'usuario', 'itensDoCarrinho', 'qtdItens', 'total')
+        fields = ('usuario', 'itensDoCarrinho', 'qtdItens', 'total')
     
     def __init__(self, *args, **kwargs):
         """Aceita dados adicionais no contexto."""
