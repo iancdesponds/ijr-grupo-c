@@ -10,7 +10,6 @@ class Produto(models.Model):
     def __str__(self):
         return self.nome
 
-
 class Carrinho(models.Model):
     id = models.AutoField(primary_key=True)
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -20,7 +19,6 @@ class Carrinho(models.Model):
     def __str__(self):
         return str("carrinho de "+self.usuario.username)
     
-
 class ItemDoCarrinho(models.Model):
     id = models.AutoField(primary_key=True)
     carrinho = models.ForeignKey(Carrinho, on_delete=models.CASCADE)

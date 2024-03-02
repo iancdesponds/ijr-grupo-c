@@ -11,7 +11,7 @@ urlpatterns = [
     path('produtos/<int:pk>/', ProdutoDetail.as_view(), name='produto-update-delete'),
     path('registro/', RegistroView.as_view(), name='registro'),
     path('login/', LoginView.as_view(), name='registro'),
-    path('produtos/<int:id_produto>/adicionar/', AdicionarItemNoCarrinho.as_view(), name='adicionar-item'),
+    path('produtos/<int:id_produto>/carrinho/', ProdutoNoCarrinhoView.as_view(), name='adicionar-item'),
     path('', include(router.urls)),
 
 ]   

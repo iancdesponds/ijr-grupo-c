@@ -80,7 +80,7 @@ class LoginView(APIView):
         else:
             return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
 
-class AdicionarItemNoCarrinho(APIView):
+class ProdutoNoCarrinhoView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -104,10 +104,13 @@ class AdicionarItemNoCarrinho(APIView):
                 if(nova_quantidade > produto.quantidade):
                     return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
                 item.update(quantidade=nova_quantidade)
-                return Response({'id': item.get().id}, status=status.HTTP_200_OK)
             else:
                 item = ItemDoCarrinho.objects.create(carrinho=carrinho, produto=produto, quantidade=quantidade)
-                return Response({'id': item.id}, status=status.HTTP_201_CREATED)
+
+            carrinho.qtdItens += quantidade
+            carrinho.total += produto.preco * quantidade
+            carrinho.save()
+            return Response(ItemDoCarrinhoSerializer(item).data, status=status.HTTP_200_OK)
         
         except Carrinho.DoesNotExist:
             return Response({'error': 'Carrinho não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
@@ -115,5 +118,49 @@ class AdicionarItemNoCarrinho(APIView):
             return Response({'error': 'Produto não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'error': f'Ocorreu um erro ao adicionar o item no carrinho: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request, id_produto, *args, **kwargs):
+        try:
+            carrinho = Carrinho.objects.get(usuario=request.user)
+            produto = Produto.objects.get(id=id_produto)
+            nova_quantidade = request.data.get('quantidade')
+
+            item_existente = ItemDoCarrinho.objects.filter(carrinho=carrinho, produto=produto).first()
+
+            if item_existente:
+                if nova_quantidade > produto.quantidade:
+                    return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
+                if nova_quantidade == 0:
+                    return Response({'error': 'Quantidade deve ser maior que zero.'}, status=status.HTTP_400_BAD_REQUEST)
+                delta = nova_quantidade - item_existente.quantidade
+                item_existente.quantidade = nova_quantidade
+                item_existente.save()
+                carrinho.qtdItens += delta
+                carrinho.total += produto.preco * delta 
+                carrinho.save()
+                return Response({'success': 'Quantidade do produto atualizada com sucesso.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Produto não encontrado no carrinho.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Ocorreu um erro ao atualizar a quantidade do produto no carrinho: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request, id_produto):
+        try:
+            id_carrinho = request.user.carrinho.id
+            carrinho = Carrinho.objects.get(id=id_carrinho)
+            produto = Produto.objects.get(id=id_produto)
+            item = ItemDoCarrinho.objects.get(carrinho=carrinho, produto=produto)
+            carrinho.qtdItens -= item.quantidade
+            carrinho.total -= produto.preco * item.quantidade
+            item.delete()
+            carrinho.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Carrinho.DoesNotExist:
+            return Response({'error': 'Carrinho não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        except Produto.DoesNotExist:
+            return Response({'error': 'Produto não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        except ItemDoCarrinho.DoesNotExist:
+            return Response({'error': 'Item não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': f'Ocorreu um erro ao remover o item do carrinho: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    # def delete(self, request, id_produto):
