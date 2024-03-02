@@ -1,6 +1,6 @@
 from rest_framework import generics
 from .models import Produto, ItemDoCarrinho, Carrinho
-from .serializers import ProdutoSerializer, ItemDoCarrinhoSerializer, CarrinhoSerializer
+from .serializers import *
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
@@ -12,7 +12,6 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
 
 class ProdutoList(generics.ListCreateAPIView):
     serializer_class = ProdutoSerializer
@@ -28,6 +27,7 @@ class ProdutoDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProdutoSerializer
     queryset = Produto.objects.all()
 
+    
 class CarrinhoViewSet(viewsets.ModelViewSet):
     queryset = Carrinho.objects.all()
     serializer_class = CarrinhoSerializer
@@ -38,8 +38,12 @@ class CarrinhoViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         carrinho = Carrinho.objects.get(usuario=request.user)
         itens_carrinho = ItemDoCarrinho.objects.filter(carrinho=carrinho)
-        itensSerializer = ItemDoCarrinhoSerializer(itens_carrinho, many=True)
-        serializer = CarrinhoSerializer(carrinho, context={'itensDoCarrinho': itensSerializer.data})
+
+        itens_serializer = []
+        for item in itens_carrinho:
+            itens_serializer.append(ItemDoCarrinhoSerializerDTO(item, context={"produto": ProdutoSerializer(item.produto).data}).data)
+
+        serializer = CarrinhoSerializer(carrinho, context={'itensDoCarrinho': itens_serializer})
         return Response(serializer.data)
 
 class RegistroView(APIView):
