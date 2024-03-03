@@ -16,7 +16,6 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -28,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,9 +36,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api.apps.ApiConfig',
+    'api',
     'rest_framework',
-    'rest_framework.authtoken',  
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -56,20 +54,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'maes_solidarias.urls'
 
+AUTH_USER_MODEL = 'api.User'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
-}
-
-Simple_JWT = {
-    'ACCESS TOKEN LIFETIME': timedelta(hours=2),
-    'REFRESH TOKEN LIFETIME': timedelta(days=1),
-    'SIGNING_KEY': SECRET_KEY,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-
 }
 
 TEMPLATES = [

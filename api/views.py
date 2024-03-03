@@ -1,7 +1,6 @@
 from rest_framework import generics
-from .models import Produto, ItemDoCarrinho, Carrinho
+from .models import Produto, ItemDoCarrinho, Carrinho, User
 from .serializers import *
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 from rest_framework import viewsets
@@ -47,18 +46,18 @@ class CarrinhoViewSet(viewsets.ModelViewSet):
 
 class RegistroView(APIView):
     def post(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
 
-        if not username or not password:
-            return Response({'error': 'Os campos "username" e "password" são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not email or not password:
+            return Response({'error': 'Os campos "email" e "password" são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            if User.objects.filter(username=username).exists():
+            if User.objects.filter(email=email).exists():
                 return Response({'error': 'Este nome de usuário já está em uso.'}, status=status.HTTP_400_BAD_REQUEST)
-            user = User.objects.create_user(username=username, password=password)
+            user = User.objects.create_user(email=email, password=password)
             cart = Carrinho.objects.create(usuario=user)
-            authenticated_user = authenticate(username=username, password=password)
+            authenticated_user = authenticate(email=email, password=password)
             if authenticated_user:
                 token, created = Token.objects.get_or_create(user=authenticated_user)
                 return Response({'token': token.key}, status=status.HTTP_201_CREATED)
@@ -69,13 +68,13 @@ class RegistroView(APIView):
 
 class LoginView(APIView):
     def post(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
 
-        if not username or not password:
-            return Response({'error': 'Os campos "username" e "password" são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not email or not password:
+            return Response({'error': 'Os campos "email" e "password" são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = authenticate(username=username, password=password)
+        user = authenticate(email=email, password=password)
 
         if user:
             token, created = Token.objects.get_or_create(user=user)
