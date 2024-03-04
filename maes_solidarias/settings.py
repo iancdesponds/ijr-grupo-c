@@ -53,8 +53,10 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'maes_solidarias.urls'
-
 AUTH_USER_MODEL = 'api.User'
+MEDIA_URL = '/media/'
+BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_ROOT = BASE_DIR / 'media'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -67,7 +69,7 @@ REST_FRAMEWORK = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],''
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

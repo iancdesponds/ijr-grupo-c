@@ -18,12 +18,19 @@ class ProdutoListCreate(generics.ListCreateAPIView):
     serializer_class = ProdutoSerializer
     queryset = Produto.objects.all()
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+
 class ProdutoDetail(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsGetMethodOrIsAdmin]
 
     serializer_class = ProdutoSerializer
     queryset = Produto.objects.all()
+
+    def get_serializer_context(self):
+        return {'request': self.request}
     
 class CarrinhoView(APIView):
     queryset = Carrinho.objects.all()
@@ -32,15 +39,19 @@ class CarrinhoView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
     def get(self, request, *args, **kwargs):
         carrinho = Carrinho.objects.get(usuario=request.user)
         itens_carrinho = ItemDoCarrinho.objects.filter(carrinho=carrinho)
 
         itens_serializer = []
         for item in itens_carrinho: 
-            itens_serializer.append(ItemDoCarrinhoSerializerDTO(item, context={"produto": ProdutoSerializer(item.produto).data}).data)
+            produto_data = ProdutoSerializer(item.produto, context={"request": request}).data
+            itens_serializer.append(ItemDoCarrinhoSerializerDTO(item, context={"produto": produto_data, "request": request}).data)
 
-        serializer = CarrinhoSerializer(carrinho, context={'itensDoCarrinho': itens_serializer})
+        serializer = CarrinhoSerializer(carrinho, context={'itensDoCarrinho': itens_serializer, "request": request})
         return Response(serializer.data)
 
 class RegistroView(APIView):
@@ -208,9 +219,10 @@ class CompraView(APIView):
 
             itens_serializer = []
             for item in itens_compra: 
-                itens_serializer.append(ItemDaCompraSerializer(item, context={"produto": ProdutoSerializer(item.produto).data}).data)
+                produto_data = ProdutoSerializer(item.produto, context={"request": request}).data
+                itens_serializer.append(ItemDaCompraSerializer(item, context={"produto": produto_data, "request": request}).data)
 
-            serializer = CompraSerializer(compra, context={'itensDaCompra': itens_serializer})
+            serializer = CompraSerializer(compra, context={'itensDaCompra': itens_serializer, "request": request})
             return Response(serializer.data)
         except Compra.DoesNotExist:
             return Response({'error': 'Nenhuma compra encontrada'}, status=status.HTTP_404_NOT_FOUND)

@@ -4,7 +4,13 @@ from .models import *
 class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
-        fields = ('id', 'nome', 'descricao', 'preco', 'estoque')
+        fields = ('id', 'nome', 'descricao', 'preco', 'estoque', 'foto')
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if representation['foto']:
+            representation['foto'] = self.context['request'].build_absolute_uri(representation['foto'])
+        return representation
 
 class ItemDoCarrinhoSerializer(serializers.ModelSerializer):
     class Meta:
