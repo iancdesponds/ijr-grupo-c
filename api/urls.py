@@ -3,7 +3,6 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'carrinho', CarrinhoViewSet)
 
 urlpatterns = [
     path('produtos/', ProdutoListCreate.as_view(), name='produto-list-create'),
@@ -12,6 +11,8 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='registro'),
     path('produtos/<int:id_produto>/carrinho/', ProdutoNoCarrinhoView.as_view(), name='adicionar-item'),
     path('checkout/', CheckOut.as_view(), name='pagamento'),
+    path('carrinho/', CarrinhoView.as_view(), name='compras'),
+    path('compras/', CompraView.as_view(), name='compras'),
     path('', include(router.urls)),
 
 ]   

@@ -25,14 +25,14 @@ class ProdutoDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProdutoSerializer
     queryset = Produto.objects.all()
     
-class CarrinhoViewSet(viewsets.ModelViewSet):
+class CarrinhoView(APIView):
     queryset = Carrinho.objects.all()
     serializer_class = CarrinhoSerializer
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         carrinho = Carrinho.objects.get(usuario=request.user)
         itens_carrinho = ItemDoCarrinho.objects.filter(carrinho=carrinho)
 
@@ -180,9 +180,11 @@ class CheckOut(APIView):
                 if item.quantidade > item.produto.quantidade:
                     return Response({'error': f'Quantidade insuficiente em estoque para o produto {item.produto.nome}'}, status=status.HTTP_400_BAD_REQUEST)
 
+            compra = Compra.objects.create(usuario=user, valor=carrinho.total, qtdItens=carrinho.qtdItens)
             for item in itens_carrinho:
                 produto = Produto.objects.get(id=item.produto.id)
                 produto.quantidade -= item.quantidade
+                ItemDaCompra.objects.create(compra=compra, produto=produto, quantidade=item.quantidade)
                 item.delete()
                 produto.save()
             carrinho.qtdItens = 0
@@ -192,4 +194,23 @@ class CheckOut(APIView):
         except Exception as e:
             return Response({'error': f'Ocorreu um erro ao processar o pagamento: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-        
+class CompraView(APIView):
+    queryset = Compra.objects.all()
+    serializer_class = CompraSerializer
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            compra = Compra.objects.get(usuario=request.user)
+            itens_compra = ItemDaCompra.objects.filter(compra=compra)
+
+            itens_serializer = []
+            for item in itens_compra: 
+                itens_serializer.append(ItemDaCompraSerializer(item, context={"produto": ProdutoSerializer(item.produto).data}).data)
+
+            serializer = CompraSerializer(compra, context={'itensDaCompra': itens_serializer})
+            return Response(serializer.data)
+        except Compra.DoesNotExist:
+            return Response({'error': 'Nenhuma compra encontrada'}, status=status.HTTP_404_NOT_FOUND)
