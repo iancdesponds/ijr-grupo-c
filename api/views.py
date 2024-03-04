@@ -205,15 +205,17 @@ class CompraView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            compra = Compra.objects.get(usuario=request.user)
-            itens_compra = ItemDaCompra.objects.filter(compra=compra)
-
-            itens_serializer = []
-            for item in itens_compra: 
-                produto_data = ProdutoSerializer(item.produto, context={"request": request}).data
-                itens_serializer.append(ItemDaCompraSerializer(item, context={"produto": produto_data, "request": request}).data)
-
-            serializer = CompraSerializer(compra, context={'itensDaCompra': itens_serializer, "request": request})
-            return Response(serializer.data)
+            compras = Compra.objects.filter(usuario=request.user).order_by('-data')
+            compra_serializer = []
+            for compra in compras:
+                itens_compra = ItemDaCompra.objects.filter(compra=compra)
+                itens_serializer = []
+                for item in itens_compra:
+                    produto_data = ProdutoSerializer(item.produto, context={"request": request}).data
+                    itens_serializer.append(ItemDaCompraSerializer(item, context={"produto": produto_data, "request": request}).data)
+                compra_serializer.append(CompraSerializer(compra, context={'itensDaCompra': itens_serializer, "request": request}).data)
+            return Response(compra_serializer, status=status.HTTP_200_OK)
         except Compra.DoesNotExist:
             return Response({'error': 'Nenhuma compra encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': f'Ocorreu um erro ao buscar as compras: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
