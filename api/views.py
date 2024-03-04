@@ -96,13 +96,13 @@ class ProdutoNoCarrinhoView(APIView):
             carrinho = Carrinho.objects.get(id=id_carrinho)
             produto = Produto.objects.get(id=id_produto)
 
-            if(quantidade > produto.quantidade):
+            if(quantidade > produto.estoque):
                 return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
 
             item = ItemDoCarrinho.objects.filter(carrinho=carrinho, produto=produto)
             if(item.exists()):
                 nova_quantidade = item.get().quantidade + quantidade
-                if(nova_quantidade > produto.quantidade):
+                if(nova_quantidade > produto.estoque):
                     return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
                 item.update(quantidade=nova_quantidade)
             else:
@@ -129,7 +129,7 @@ class ProdutoNoCarrinhoView(APIView):
             item_existente = ItemDoCarrinho.objects.filter(carrinho=carrinho, produto=produto).first()
 
             if item_existente:
-                if nova_quantidade > produto.quantidade:
+                if nova_quantidade > produto.estoque:
                     return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
                 if nova_quantidade == 0:
                     return Response({'error': 'Quantidade deve ser maior que zero.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -177,13 +177,13 @@ class CheckOut(APIView):
         try:
             itens_carrinho = ItemDoCarrinho.objects.filter(carrinho=carrinho)
             for item in itens_carrinho:
-                if item.quantidade > item.produto.quantidade:
+                if item.quantidade > item.produto.estoque:
                     return Response({'error': f'Quantidade insuficiente em estoque para o produto {item.produto.nome}'}, status=status.HTTP_400_BAD_REQUEST)
 
             compra = Compra.objects.create(usuario=user, valor=carrinho.total, qtdItens=carrinho.qtdItens)
             for item in itens_carrinho:
                 produto = Produto.objects.get(id=item.produto.id)
-                produto.quantidade -= item.quantidade
+                produto.estoque -= item.quantidade
                 ItemDaCompra.objects.create(compra=compra, produto=produto, quantidade=item.quantidade)
                 item.delete()
                 produto.save()
