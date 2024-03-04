@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from .models import Produto, ItemDoCarrinho, Carrinho, User
 from .serializers import *
 from .permissions import *
+from .functions import *
 
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -20,7 +21,6 @@ class ProdutoListCreate(generics.ListCreateAPIView):
 
     def get_serializer_context(self):
         return {'request': self.request}
-
 
 class ProdutoDetail(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [TokenAuthentication]
@@ -43,16 +43,7 @@ class CarrinhoView(APIView):
         return {'request': self.request}
 
     def get(self, request, *args, **kwargs):
-        carrinho = Carrinho.objects.get(usuario=request.user)
-        itens_carrinho = ItemDoCarrinho.objects.filter(carrinho=carrinho)
-
-        itens_serializer = []
-        for item in itens_carrinho: 
-            produto_data = ProdutoSerializer(item.produto, context={"request": request}).data
-            itens_serializer.append(ItemDoCarrinhoSerializerDTO(item, context={"produto": produto_data, "request": request}).data)
-
-        serializer = CarrinhoSerializer(carrinho, context={'itensDoCarrinho': itens_serializer, "request": request})
-        return Response(serializer.data)
+        return Response(get_carrinho(request), status=status.HTTP_200_OK)
 
 class RegistroView(APIView):
     def post(self, request):
@@ -122,7 +113,7 @@ class ProdutoNoCarrinhoView(APIView):
             carrinho.qtdItens += quantidade
             carrinho.total += produto.preco * quantidade
             carrinho.save()
-            return Response(ItemDoCarrinhoSerializer(item).data, status=status.HTTP_200_OK)
+            return Response(get_carrinho(request), status=status.HTTP_200_OK)
         
         except Carrinho.DoesNotExist:
             return Response({'error': 'Carrinho não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
@@ -150,7 +141,7 @@ class ProdutoNoCarrinhoView(APIView):
                 carrinho.qtdItens += delta
                 carrinho.total += produto.preco * delta 
                 carrinho.save()
-                return Response({'success': 'Quantidade do produto atualizada com sucesso.'}, status=status.HTTP_200_OK)
+                return Response(get_carrinho(request), status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Produto não encontrado no carrinho.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
