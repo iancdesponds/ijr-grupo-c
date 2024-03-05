@@ -106,7 +106,12 @@ class ProdutoNoCarrinhoView(APIView):
                 nova_quantidade = item.get().quantidade + quantidade
                 if(nova_quantidade > produto.estoque):
                     return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
-                item.update(quantidade=nova_quantidade)
+                elif(nova_quantidade < 0):
+                    return Response({'error': 'Quantidade inválida.'}, status=status.HTTP_400_BAD_REQUEST)
+                elif(nova_quantidade == 0):
+                    item.delete()
+                else:
+                    item.update(quantidade=nova_quantidade)
             else:
                 item = ItemDoCarrinho.objects.create(carrinho=carrinho, produto=produto, quantidade=quantidade)
 
@@ -128,19 +133,22 @@ class ProdutoNoCarrinhoView(APIView):
             produto = Produto.objects.get(id=id_produto)
             nova_quantidade = request.data.get('quantidade')
 
-            item_existente = ItemDoCarrinho.objects.filter(carrinho=carrinho, produto=produto).first()
+            item = ItemDoCarrinho.objects.filter(carrinho=carrinho, produto=produto).first()
 
-            if item_existente:
-                if nova_quantidade > produto.estoque:
+            if item:
+                if(nova_quantidade > produto.estoque):
                     return Response({'error': 'Quantidade insuficiente em estoque'}, status=status.HTTP_400_BAD_REQUEST)
-                if nova_quantidade == 0:
-                    return Response({'error': 'Quantidade deve ser maior que zero.'}, status=status.HTTP_400_BAD_REQUEST)
-                delta = nova_quantidade - item_existente.quantidade
-                item_existente.quantidade = nova_quantidade
-                item_existente.save()
-                carrinho.qtdItens += delta
-                carrinho.total += produto.preco * delta 
-                carrinho.save()
+                elif(nova_quantidade < 0):
+                    return Response({'error': 'Quantidade inválida.'}, status=status.HTTP_400_BAD_REQUEST)
+                elif(nova_quantidade == 0):
+                    item.delete()
+                else:
+                    delta = nova_quantidade - item.quantidade
+                    item.quantidade = nova_quantidade
+                    item.save()
+                    carrinho.qtdItens += delta
+                    carrinho.total += produto.preco * delta 
+                    carrinho.save()
                 return Response(get_carrinho(request), status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Produto não encontrado no carrinho.'}, status=status.HTTP_404_NOT_FOUND)
