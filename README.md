@@ -1,17 +1,17 @@
 # Mães Solidárias API
 
-# Configuração e Execução do Projeto Django REST
+## Configuração e Execução do Projeto Django REST
 
 Este guia fornece instruções passo a passo sobre como configurar e executar um projeto Django REST. Certifique-se de seguir cada etapa cuidadosamente para garantir uma configuração bem-sucedida.
 
-## Pré-requisitos
+### Pré-requisitos
 
 Antes de começar, certifique-se de ter os seguintes pré-requisitos instalados em seu sistema:
 
 - Python 3.x
 - pip (gerenciador de pacotes Python)
 
-## Configuração do Ambiente Virtual
+### Configuração do Ambiente Virtual
 
 1. Abra o terminal na raiz do projeto.
 
@@ -35,7 +35,7 @@ Antes de começar, certifique-se de ter os seguintes pré-requisitos instalados 
         source venv/bin/activate
         ```
 
-## Instalação das Dependências
+### Instalação das Dependências
 
 1. Certifique-se de que o ambiente virtual está ativado.
 
@@ -57,7 +57,7 @@ Antes de começar, certifique-se de ter os seguintes pré-requisitos instalados 
     python manage.py migrate
     ```
 
-## Executando o Servidor
+### Executando o Servidor
 
 1. No terminal, execute o seguinte comando para iniciar o servidor de desenvolvimento:
 
@@ -67,7 +67,7 @@ Antes de começar, certifique-se de ter os seguintes pré-requisitos instalados 
 
 2. Abra o navegador e acesse `http://127.0.0.1:8000/` para verificar se o servidor está funcionando corretamente.
 
-## Testando a API
+### Testando a API
 
 1. Utilize ferramentas como [Postman](https://www.postman.com/) ou [curl](https://curl.se/) para testar as diferentes endpoints da sua API.
 
