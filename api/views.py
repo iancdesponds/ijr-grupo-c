@@ -17,7 +17,7 @@ class ProdutoListCreate(generics.ListCreateAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsGetMethodOrIsAdmin]
     serializer_class = ProdutoSerializer
-    queryset = Produto.objects.all()
+    queryset = Produto.objects.all().order_by("-estoque")
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -55,7 +55,7 @@ class RegistroView(APIView):
 
         try:
             if User.objects.filter(email=email).exists():
-                return Response({'error': 'Este nome de usuário já está em uso.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Este email já está em uso.'}, status=status.HTTP_400_BAD_REQUEST)
             user = User.objects.create_user(email=email, password=password)
             cart = Carrinho.objects.create(usuario=user)
             authenticated_user = authenticate(email=email, password=password)
@@ -165,7 +165,7 @@ class ProdutoNoCarrinhoView(APIView):
             carrinho.total -= produto.preco * item.quantidade
             item.delete()
             carrinho.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(get_carrinho(request), status=status.HTTP_200_OK)
         except Carrinho.DoesNotExist:
             return Response({'error': 'Carrinho não encontrado'}, status=status.HTTP_400_BAD_REQUEST)
         except Produto.DoesNotExist:
